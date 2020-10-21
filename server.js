@@ -46,27 +46,34 @@ async function getResults(userCoordinates) {
         const apiKey0 = require('./requestVarFile.js')
         //Search by location
         let getPlaceUrl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant';
-            let placesjson = await reusableRequest(getPlaceUrl);
-                let placesobj = JSON.parse(placesjson);
+            let placesJson = await reusableRequest(getPlaceUrl);
+                let placesObj = JSON.parse(placesJson);
         //Choose Random place
-        let randomplace = placesobj.results[ Math.floor(Math.random() * placesobj.results.length)];
-        let getPlaceDetailsUrl = 'https://maps.googleapis.com/maps/api/place/details/json?place_id='+randomplace.place_id+'&key='+apiKey0;
+        let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
+        let getPlaceDetailsUrl = 'https://maps.googleapis.com/maps/api/place/details/json?place_id='+randomPlace.place_id+'&key='+apiKey0;
         //Get placeDetails
         let placeDetailsJson = await reusableRequest(getPlaceDetailsUrl);
             let placeDetailsObj = JSON.parse(placeDetailsJson);
         //This prevents the application from erroring, if there are no images for the place, creates URL array if place has images.
         if (placeDetailsObj.result.photos !== undefined){
-            //Constructing image URLs into an Array
-            let placeImageUrls = [];
+            //Constructing image URLs into an Array and defining our object
+            let placePhotosUrls = [];
+            placeDetailsObj.result.photoUrls = []; 
             //API key is readable in this URL, but is NOT usable by anyone outside my network, will address in later 
             for(let i=0; i<placeDetailsObj.result.photos.length; i++){
-                placeImageUrls.push('https://maps.googleapis.com/maps/api/place/photo?maxwidth=2000&photoreference='+placeDetailsObj.result.photos[i].photo_reference+'&key='+apiKey0)
+                //pushes to array
+                placePhotosUrls.push('https://maps.googleapis.com/maps/api/place/photo?maxwidth=2000&photoreference='+placeDetailsObj.result.photos[i].photo_reference+'&key='+apiKey0)
+                //current item in array pushes to our object
+                placeDetailsObj.result.photoUrls.push({"URL":placePhotosUrls[i]});
             }
             //Get PlaceMaps Details
-            placeMapsUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey0}&q=place_id:${placeDetailsObj.result.place_id}`;
+            placeDetailsObj.result.mapsEmbedUrls = []; 
+            placeDetailsObj.result.mapsEmbedUrls.push({"URL":`https://www.google.com/maps/embed/v1/place?key=${apiKey0}&q=place_id:${placeDetailsObj.result.place_id}`});
         }
+        //Here we combine all our data into JSON together to be sent in the response
         //Return JSON to be sent in response to react
-        return placeDetailsJson;
+        jsonResponse = JSON.stringify(placeDetailsObj);
+        return jsonResponse;
     }catch(error){
         console.error(error);
         //Return error in response to react
