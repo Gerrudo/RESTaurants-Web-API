@@ -1,0 +1,27 @@
+{
+  "name": "restaurants-web-api",
+  "version": "1.0.0",
+  "description": "Backend Web API for the RESTaurants WebApp",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gerrudo/RESTaurants-Web-API.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gerrudo/RESTaurants-Web-API/issues"
+  },
+  "homepage": "https://github.com/Gerrudo/RESTaurants-Web-API#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "fs": "0.0.1-security",
+    "request": "^2.88.2"
+  }
+}
