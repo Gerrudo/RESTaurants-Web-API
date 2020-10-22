@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/b730f7fe-8b65-4c4e-b634-163cf1548d77/resourceGroups/RESTaurantsDevTest_rg/providers/Microsoft.Web/sites/RESTaurants-web-api",
+    "appService.deploySubpath": "."
+}

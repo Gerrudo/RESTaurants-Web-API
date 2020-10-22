@@ -5,7 +5,7 @@ const https = require('https')
 const request = require('request');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const port = process.env.PORT || 443;
+const port = process.env.PORT || 1443;
 //Will need to provide certs, can change format from .pem if needed
 const key = fs.readFileSync(__dirname + '/certs/privkey.pem');
 const cert = fs.readFileSync(__dirname + '/certs/cert.pem');
