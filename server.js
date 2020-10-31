@@ -5,6 +5,8 @@ const https = require('https')
 const request = require('request');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const mongo = require('mongodb');
+const { json } = require('body-parser');
 const port = process.env.PORT || 1443;
 //Will need to provide certs, can change format from .pem if needed
 const key = fs.readFileSync(__dirname + '/certs/privkey.pem');
@@ -13,6 +15,11 @@ const options = {
   key: key,
   cert: cert
 };
+
+/*
+Express Server Creation/Parsing Tools
+*/
+
 //Creating server with cert options
 const server = https.createServer(options, app);
 //Cors for later use and bodyParser for reading JSON body of incoming responses
@@ -23,10 +30,37 @@ app.use(bodyParser.json());
 server.listen(port, function(){
     console.log('listening on *:' + port);
 });
-//Request to Google Places
-function reusableRequest(url){
+
+/*
+MongoDB Connectors/Collection creation
+*/
+
+const MongoClient = require('mongodb').MongoClient;
+const dbName = 'restaurants-web-api-db'
+const dbHost = `protainer.lan:27017`
+const url = `mongodb://${dbHost}/${dbName}`;
+
+MongoClient.connect(url, function(err, db) {
+    if (err) console.error(err);
+     db.close();
+});
+
+MongoClient.connect(url, function(err, db) {
+    if (err) console.error(err);
+    let dbo = db.db(dbName);
+    dbo.createCollection("recent-locations", function(err, res) {
+        if (err) console.error(err);
+        db.close();
+    });
+});
+
+/*
+External Web Request Methods
+*/
+
+function reusableRequest(url, method){
     let options = {
-      'method': 'GET',
+      'method': method,
       'url': url,
       'headers': {
         headers : ''
@@ -40,19 +74,24 @@ function reusableRequest(url){
       });
     })
 };
+
+/*
+Google Places API Request/Parsing 
+*/
+
 //Async function for getting all the results, returns placeDetailsJson
 async function getResults(userCoordinates) {
     try{
         const apiKey0 = require('./requestVarFile.js')
         //Search by location
         let getPlaceUrl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant';
-            let placesJson = await reusableRequest(getPlaceUrl);
+            let placesJson = await reusableRequest(getPlaceUrl, 'GET');
                 let placesObj = JSON.parse(placesJson);
         //Choose Random place
         let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
         let getPlaceDetailsUrl = 'https://maps.googleapis.com/maps/api/place/details/json?place_id='+randomPlace.place_id+'&key='+apiKey0;
         //Get placeDetails
-        let placeDetailsJson = await reusableRequest(getPlaceDetailsUrl);
+        let placeDetailsJson = await reusableRequest(getPlaceDetailsUrl, 'GET');
             let placeDetailsObj = JSON.parse(placeDetailsJson);
         //This prevents the application from erroring, if there are no images for the place, creates URL array if place has images.
         if (placeDetailsObj.result.photos !== undefined){
@@ -72,6 +111,10 @@ async function getResults(userCoordinates) {
         }
         //Here we combine all our data into JSON together to be sent in the response
         //Return JSON to be sent in response to react
+
+        //Send results to collector to be inserted into DB collection
+        collectResults(placeDetailsObj);
+
         jsonResponse = JSON.stringify(placeDetailsObj);
         return jsonResponse;
     }catch(error){
@@ -88,7 +131,7 @@ function waitForDetails(userCoordinates){
     })
 };
 //Awaits for API promise to resolve
-async function sendResponse(req, res){
+async function sendLocationResponse(req, res){
     try{
         let responseObject = await waitForDetails(req.body.userCoordinates);
         res.send(responseObject)
@@ -96,9 +139,48 @@ async function sendResponse(req, res){
         res.send(error)
     }
 };
+
+function collectResults(placeDetailsObj){
+    MongoClient.connect(url, function(err, db) {
+        if (err) console.error(err);
+        let dbo = db.db(dbName);
+        let recentLocation = { 
+            name: placeDetailsObj.result.name, 
+            address: placeDetailsObj.result.formatted_address, 
+            googleMapsUrl: placeDetailsObj.result.url,
+            googleImageUrl: placeDetailsObj.result.photoUrls
+        };
+        dbo.collection("recent-locations").insertOne(recentLocation, function(err, res) {
+          if (err) console.error(err);
+          db.close();
+        });
+      });
+}
+
+/*
+API HANDLERS
+*/
+
 //Handler for /go when userCoordinates is provided
-app.post('/go', (req, res) => {
+app.post('/newlocationsearch', (req, res) => {
     //Sets off API requests and parsing, passes userCoordinates to Google Places Call function.
-    sendResponse(req, res);
+    sendLocationResponse(req, res);
 });
 
+app.get('/recentlocations', (req, res) => {
+    MongoClient.connect(url, function(err, db) {
+        if (err) console.error(err);
+        var dbo = db.db(dbName);
+        var mysort = { name: -1 };
+        dbo.collection("recent-locations").find().limit(3).sort(mysort).toArray(function(err, result) {
+          if (err) console.error(err);
+          db.close();
+          jsonResponse = JSON.stringify(result);
+            try{
+                res.send(jsonResponse)
+            }catch(error){
+                res.send(error)
+            }
+        });
+      });
+});
