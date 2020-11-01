@@ -170,8 +170,8 @@ app.post('/newlocationsearch', (req, res) => {
 app.get('/recentlocations', (req, res) => {
     MongoClient.connect(url, function(err, db) {
         if (err) console.error(err);
-        var dbo = db.db(dbName);
-        var mysort = { name: -1 };
+        let dbo = db.db(dbName);
+        let mysort = { name: -1 };
         dbo.collection("recent-locations").find().limit(3).sort(mysort).toArray(function(err, result) {
           if (err) console.error(err);
           db.close();
