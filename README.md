@@ -11,8 +11,12 @@ Backend Web API for the RESTaurants WebApp
     - [x] Setup MongoDB using docker image
     - [x] Add Mongo DB connectiors
     - [x] initialise DB and collection creation + error handling
-    - [ ] Create functions for inputting new data into the DB
-    - [ ] Create API endpoint for getting recent-locations collection
-    - [ ] Create insert for current results data: Name, Address(City/Town only), 1 image, link to google maps
-- [ ] Use MongoDB to save details about user requests
+    - [x] Create functions for inputting new data into the DB
+    - [x] Create API endpoint for getting recent-locations collection
+    - [x] Create insert for current results data: Name, Address(City/Town only), 1 image, link to google maps
+- [x] Use MongoDB to save details about user requests
+- [ ] Handle rating limiting issue with google API
+    - [ ] Store location JSON and pick random request based on user token.
+    - [ ] Only have API requests for new embeds and images (This is currently client side, this needs to be changed.)
+    - [ ] Impliment API rate limiting based on IP address
 - [ ] Move to Azure/AWS/GCloud for hosting
