@@ -5,8 +5,6 @@ const https = require('https')
 const request = require('request');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const mongo = require('mongodb');
-const { json } = require('body-parser');
 const port = process.env.PORT || 1443;
 //Will need to provide certs, can change format from .pem if needed
 const key = fs.readFileSync(__dirname + '/certs/privkey.pem');
@@ -15,6 +13,7 @@ const options = {
   key: key,
   cert: cert
 };
+const apiKey0 = require('./requestVarFile.js')
 
 /*
 Express Server Creation/Parsing Tools
@@ -36,7 +35,7 @@ MongoDB Connectors/Collection creation
 */
 
 const MongoClient = require('mongodb').MongoClient;
-const dbName = 'restaurants-web-api-db'
+const dbName = 'restaurantswebapidb'
 const dbHost = `protainer.lan:27017`
 const url = `mongodb://${dbHost}/${dbName}`;
 
@@ -48,7 +47,7 @@ MongoClient.connect(url, function(err, db) {
 MongoClient.connect(url, function(err, db) {
     if (err) console.error(err);
     let dbo = db.db(dbName);
-    dbo.createCollection("recent-locations", function(err, res) {
+    dbo.createCollection("recentlocations", function(err, res) {
         //if (err) console.error(err);
         db.close();
     });
@@ -102,6 +101,7 @@ async function newRequest(randomPlace){
         placeDetailsObj.result.mapsEmbedUrls.push({"URL":`https://www.google.com/maps/embed/v1/place?key=${apiKey0}&q=place_id:${placeDetailsObj.result.place_id}`});
     }
     //Here we combine all our data into JSON together to be sent in the response
+    
     //Return JSON to be sent in response to react
 
     //Send results to collector to be inserted into DB collection
@@ -114,7 +114,6 @@ async function newRequest(randomPlace){
 //Async function for getting all the results, returns placeDetailsJson
 async function getResults(userCoordinates) {
     try{
-        const apiKey0 = require('./requestVarFile.js')
         //Search by location
         let getPlaceUrl = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant';
             let placesJson = await reusableRequest(getPlaceUrl, 'GET');
@@ -129,13 +128,13 @@ async function getResults(userCoordinates) {
             if (err) console.log(err);
             let dbo = db.db(dbName);
             let query = {"result.place_id": randomPlace.place_id};
-                dbo.collection("recent-locations").find(query).toArray(function(err, result) {
+                dbo.collection("recentlocations").find(query).toArray(function(err, result) {
                     if (result.length !== 0){
-                        console.log('Sending from database')
+                        console.log('Sending from database');
                         return result;
                     }else{
-                        console.log('No match, making new request')
-                        newRequest(randomPlace)
+                        console.log('No match, making new request');
+                        newRequest(randomPlace);
                     }
                 if (err) console.error(err);
                 db.close();
@@ -152,16 +151,16 @@ async function getResults(userCoordinates) {
 function waitForDetails(userCoordinates){
     return new Promise (function (resolve) {
         responseObject = getResults(userCoordinates);
-        resolve(responseObject)
+        resolve(responseObject);
     })
 };
 //Awaits for API promise to resolve
 async function sendLocationResponse(req, res){
     try{
         let responseObject = await waitForDetails(req.body.userCoordinates);
-        res.send(responseObject)
+        res.send(responseObject);
     }catch(error){
-        res.send(error)
+        res.send(error);
     }
 };
 //Returning results to the database
@@ -169,8 +168,8 @@ function collectResults(placeDetailsObj){
     MongoClient.connect(url, function(err, db) {
         if (err) console.error(err);
         let dbo = db.db(dbName);
-        dbo.collection("recent-locations").insertOne(placeDetailsObj, function(err, res) {
-            console.log(`inserted ${placeDetailsObj.result.place_id}`)
+        dbo.collection("recentlocations").insertOne(placeDetailsObj, function(err, res) {
+            console.log(`inserted ${placeDetailsObj.result.place_id}`);
             if (err) console.error(err);
             db.close();
         });
@@ -192,14 +191,14 @@ app.get('/recentlocations', (req, res) => {
         if (err) console.error(err);
         let dbo = db.db(dbName);
         let mysort = { name: -1 };
-        dbo.collection("recent-locations").find().limit(3).sort(mysort).toArray(function(err, result) {
+        dbo.collection("recentlocations").find().limit(3).sort(mysort).toArray(function(err, result) {
           if (err) console.error(err);
           db.close();
           jsonResponse = JSON.stringify(result);
             try{
-                res.send(jsonResponse)
+                res.send(jsonResponse);
             }catch(error){
-                res.send(error)
+                res.send(error);
             }
         });
       });
