@@ -48,7 +48,6 @@ MongoClient.connect(url, function(err, db) {
     if (err) console.error(err);
     let dbo = db.db(dbName);
     dbo.createCollection("recentlocations", function(err, res) {
-        //if (err) console.error(err);
         db.close();
     });
 });
@@ -114,7 +113,7 @@ function newRequest(randomPlace){
 }
 
 //Async function for getting all the results, returns placeDetailsJson
-async function getResults(userCoordinates) {
+function getResults(userCoordinates) {
     try{
         return new Promise (async function (resolve) {
         //Search by location
@@ -123,11 +122,10 @@ async function getResults(userCoordinates) {
             //Choose Random place
             let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
             //Check if data we got is cached in the database
-            let isCached = await cachedRequestCheck(randomPlace)
-
+            let isCached = await cachedRequestCheck(randomPlace);
             //If we have the data, pull from db, if not, make a new request.
             if (isCached === true){
-                MongoClient.connect(url, async function(err, db) {
+                MongoClient.connect(url, function(err, db) {
                     if (err) console.log(err);
                     let dbo = db.db(dbName);
                     let query = {"result.place_id": randomPlace.place_id};
@@ -149,23 +147,27 @@ async function getResults(userCoordinates) {
 };
 
 function cachedRequestCheck(randomPlace){
-    //Here We will add the database to check for selected place_id
-    MongoClient.connect(url, function(err, db) {
-        if (err) console.log(err);
-        let dbo = db.db(dbName);
-        let query = {"result.place_id": randomPlace.place_id};
-            dbo.collection("recentlocations").find(query).toArray(function(err, result) {
-                if (err) console.error(err);
-                db.close();
-                if (result.length !== 0){
-                    console.log('Sending from database');
-                    return isCached = true;
-                }else{
-                    console.log('No match, making new request');
-                    return isCached = false;
-                }
+    return new Promise (function (resolve) {
+        //Here We will add the database to check for selected place_id
+        MongoClient.connect(url, function(err, db) {
+            if (err) console.log(err);
+            let dbo = db.db(dbName);
+            let query = {"result.place_id": randomPlace.place_id};
+                dbo.collection("recentlocations").find(query).toArray(function(err, result) {
+                    if (err) console.error(err);
+                    db.close();
+                    if (result.length !== 0){
+                        console.log('Sending from database');
+                        isCached = true;
+                        resolve(isCached);
+                    }else{
+                        console.log('No match, making new request');
+                        isCached = false;
+                        resolve(isCached);
+                    }
+            });
         });
-    });
+    })
 }
 
 //Returns promise once all api requests have finished
