@@ -14,8 +14,6 @@ const options = {
   cert: cert
 };
 const apiKey0 = require('./requestVarFile.js');
-const { resolve } = require('path');
-const { response } = require('express');
 
 /*
 Express Server Creation/Parsing Tools
@@ -38,7 +36,7 @@ MongoDB Connectors/Collection creation
 
 const MongoClient = require('mongodb').MongoClient;
 const dbName = 'restaurantswebapidb'
-const dbHost = `protainer.lan:27017`
+const dbHost = `vmdev1protainer.uksouth.cloudapp.azure.com:27017`
 const url = `mongodb://${dbHost}/${dbName}`;
 
 MongoClient.connect(url, function(err, db) {
@@ -118,38 +116,39 @@ function newRequest(randomPlace){
 //Async function for getting all the results, returns placeDetailsJson
 async function getResults(userCoordinates) {
     try{
+        return new Promise (async function (resolve) {
         //Search by location
-        let placesJson = await reusableRequest('https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant', 'GET');
-        let placesObj = JSON.parse(placesJson);
-        //Choose Random place
-        let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
-        //Check if data we got is cached in the database
-        let isCached = await cachedRequestCheck(randomPlace)
+            let placesJson = await reusableRequest('https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant', 'GET');
+            let placesObj = JSON.parse(placesJson);
+            //Choose Random place
+            let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
+            //Check if data we got is cached in the database
+            let isCached = await cachedRequestCheck(randomPlace)
 
-        //If we have the data, pull from db, if not, make a new request.
-        if (isCached === true){
-            MongoClient.connect(url, function(err, db) {
-                if (err) console.log(err);
-                let dbo = db.db(dbName);
-                let query = {"result.place_id": randomPlace.place_id};
-                    dbo.collection("recentlocations").find(query).toArray(function(err, result) {
-                        if (err) console.error(err);
-                        db.close();
-                        resolve(result)
+            //If we have the data, pull from db, if not, make a new request.
+            if (isCached === true){
+                MongoClient.connect(url, async function(err, db) {
+                    if (err) console.log(err);
+                    let dbo = db.db(dbName);
+                    let query = {"result.place_id": randomPlace.place_id};
+                        dbo.collection("recentlocations").find(query).toArray(function(err, result) {
+                            if (err) console.error(err);
+                            db.close();
+                            resolve(result)
+                    });
                 });
-            });
-        }else{
-            await newRequest(randomPlace);
-        }
-
+            }else{
+                let result = await newRequest(randomPlace);
+                resolve(result);
+            }
+        })
     }catch(error){
         console.error(error);
-        //Return error in response to react
         return error;
     }
 };
 
-function cachedRequestCheck(randomPlace, isCached){
+function cachedRequestCheck(randomPlace){
     //Here We will add the database to check for selected place_id
     MongoClient.connect(url, function(err, db) {
         if (err) console.log(err);
@@ -171,16 +170,18 @@ function cachedRequestCheck(randomPlace, isCached){
 
 //Returns promise once all api requests have finished
 function waitForDetails(userCoordinates){
-    return new Promise (function (resolve) {
-        responseObject = getResults(userCoordinates);
+    return new Promise (async function (resolve) {
+        let responseObject = await getResults(userCoordinates);
         resolve(responseObject);
     })
+
+    //Should probably form a promise.all connection that we can resolve here
+
 };
 //Awaits for API promise to resolve
 async function sendLocationResponse(req, res){
     try{
         let responseObject = await waitForDetails(req.body.userCoordinates);
-        console.log(responseObject)
         res.send(responseObject);
     }catch(error){
         res.send(error);
