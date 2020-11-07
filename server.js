@@ -210,6 +210,6 @@ app.get('/recentlocations', (req, res) => {
 });
 
 app.get('/images', (req, res) => {
-    let url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=2000&photoreference=${req.body.photo_reference}&key=${apiKey0}`;
+    let url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=2000&photoreference=${req.query.photo_reference}&key=${apiKey0}`;
     request.get(url).pipe(res);
 });
