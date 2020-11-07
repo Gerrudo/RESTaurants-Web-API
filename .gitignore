@@ -1,5 +1,5 @@
 requestVarFile.js
 certs/cert.pem
 certs/privkey.pem
-node_modules
+./node_modules
 .vscode
