@@ -109,7 +109,7 @@ function getResults(userCoordinates) {
                         dbo.collection("recentlocations").find(query).toArray(function(err, result) {
                             if (err) console.error(err);
                             db.close();
-                            resolve(result)
+                            resolve(result[0])
                     });
                 });
             }else{
