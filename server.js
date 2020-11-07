@@ -14,6 +14,7 @@ const options = {
   cert: cert
 };
 const apiKey0 = require('./requestVarFile.js');
+const dbConfig = require('./dbConfig.js');
 
 /*
 Express Server Creation/Parsing Tools
@@ -35,18 +36,15 @@ MongoDB Connectors/Collection creation
 */
 
 const MongoClient = require('mongodb').MongoClient;
-const dbName = 'restaurantswebapidb';
-const dbHost = `vmdev1protainer.uksouth.cloudapp.azure.com:27017`;
-const url = `mongodb://${dbHost}/${dbName}`;
 
-MongoClient.connect(url, function(err, db) {
+MongoClient.connect(dbConfig.url, function(err, db) {
     if (err) console.error(err);
      db.close();
 });
 
-MongoClient.connect(url, function(err, db) {
+MongoClient.connect(dbConfig.url, function(err, db) {
     if (err) console.error(err);
-    let dbo = db.db(dbName);
+    let dbo = db.db(dbConfig.dbName);
     dbo.createCollection("recentlocations", function(err, res) {
         db.close();
     });
@@ -104,9 +102,9 @@ function getResults(userCoordinates) {
             let isCached = await cachedRequestCheck(randomPlace);
             //If we have the data, pull from db, if not, make a new request.
             if (isCached === true){
-                MongoClient.connect(url, function(err, db) {
+                MongoClient.connect(dbConfig.url, function(err, db) {
                     if (err) console.log(err);
-                    let dbo = db.db(dbName);
+                    let dbo = db.db(dbConfig.dbName);
                     let query = {"result.place_id": randomPlace.place_id};
                         dbo.collection("recentlocations").find(query).toArray(function(err, result) {
                             if (err) console.error(err);
@@ -128,19 +126,17 @@ function getResults(userCoordinates) {
 function cachedRequestCheck(randomPlace){
     return new Promise (function (resolve) {
         //Here We will add the database to check for selected place_id
-        MongoClient.connect(url, function(err, db) {
+        MongoClient.connect(dbConfig.url, function(err, db) {
             if (err) console.log(err);
-            let dbo = db.db(dbName);
+            let dbo = db.db(dbConfig.dbName);
             let query = {"result.place_id": randomPlace.place_id};
                 dbo.collection("recentlocations").find(query).toArray(function(err, result) {
                     if (err) console.error(err);
                     db.close();
                     if (result.length !== 0){
-                        console.log('Sending from database');
                         isCached = true;
                         resolve(isCached);
                     }else{
-                        console.log('No match, making new request');
                         isCached = false;
                         resolve(isCached);
                     }
@@ -170,11 +166,10 @@ async function sendLocationResponse(req, res){
 };
 //Returning results to the database
 function collectResults(placeDetailsObj){
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(dbConfig.url, function(err, db) {
         if (err) console.error(err);
-        let dbo = db.db(dbName);
+        let dbo = db.db(dbConfig.dbName);
         dbo.collection("recentlocations").insertOne(placeDetailsObj, function(err, res) {
-            console.log(`inserted ${placeDetailsObj.result.place_id}`);
             if (err) console.error(err);
             db.close();
         });
@@ -192,9 +187,9 @@ app.post('/newlocationsearch', (req, res) => {
 });
 
 app.get('/recentlocations', (req, res) => {
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(dbConfig.url, function(err, db) {
         if (err) console.error(err);
-        let dbo = db.db(dbName);
+        let dbo = db.db(dbConfig.dbName);
         let mysort = { name: -1 };
         dbo.collection("recentlocations").find().limit(3).sort(mysort).toArray(function(err, result) {
           if (err) console.error(err);
