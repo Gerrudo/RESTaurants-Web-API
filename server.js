@@ -61,14 +61,14 @@ function reusableRequest(url, method){
       'headers': {
         headers : ''
       }
-    }
+    };
     //Returns promise once Google Place API Request has finished
     return new Promise (function (resolve) {
       request(options, function (error, response) {
-        if (error) throw new Error(error);
+        if (error) console.error(error);
         resolve(response.body);
       });
-    })
+    });
 };
 
 /*
@@ -86,8 +86,8 @@ function newRequest(randomPlace){
         collectResults(placeDetailsObj);
         jsonResponse = JSON.stringify(placeDetailsObj);
         resolve(jsonResponse);
-    })
-}
+    });
+};
 
 //Async function for getting all the results, returns placeDetailsJson
 function getResults(userCoordinates) {
@@ -124,25 +124,29 @@ function getResults(userCoordinates) {
 };
 
 function cachedRequestCheck(randomPlace){
-    return new Promise (function (resolve) {
-        //Here We will add the database to check for selected place_id
-        MongoClient.connect(dbConfig.url, function(err, db) {
-            if (err) console.log(err);
-            let dbo = db.db(dbConfig.dbName);
-            let query = {"result.place_id": randomPlace.place_id};
-                dbo.collection("recentlocations").find(query).toArray(function(err, result) {
-                    if (err) console.error(err);
-                    db.close();
-                    if (result.length !== 0){
-                        isCached = true;
-                        resolve(isCached);
-                    }else{
-                        isCached = false;
-                        resolve(isCached);
-                    }
+    try{
+        return new Promise (function (resolve) {
+            //Here We will add the database to check for selected place_id
+            MongoClient.connect(dbConfig.url, function(err, db) {
+                if (err) console.log(err);
+                let dbo = db.db(dbConfig.dbName);
+                let query = {"result.place_id": randomPlace.place_id};
+                    dbo.collection("recentlocations").find(query).toArray(function(err, result) {
+                        if (err) console.error(err);
+                        db.close();
+                        if (result.length !== 0){
+                            isCached = true;
+                            resolve(isCached);
+                        }else{
+                            isCached = false;
+                            resolve(isCached);
+                        }
+                });
             });
-        });
-    })
+        })
+    }catch(error){
+        console.error(error);
+    }
 }
 
 //Returns promise once all api requests have finished
@@ -151,14 +155,11 @@ function waitForDetails(userCoordinates){
         let responseObject = await getResults(userCoordinates);
         resolve(responseObject);
     })
-
-    //Should probably form a promise.all connection that we can resolve here
-
 };
 //Awaits for API promise to resolve
 async function sendLocationResponse(req, res){
     try{
-        let responseObject = await waitForDetails(req.body.userCoordinates);
+        let responseObject = await waitForDetails(req.query.coordinates);
         res.send(responseObject);
     }catch(error){
         res.send(error);
@@ -173,8 +174,33 @@ function collectResults(placeDetailsObj){
             if (err) console.error(err);
             db.close();
         });
-      });
+    });
 }
+
+async function sendRecentLocations(req, res){
+    try{
+        let result = await getRecentLocations();
+        jsonResponse = JSON.stringify(result);
+        res.send(jsonResponse);
+    }catch(error){
+        res.send(error);
+    };
+};
+
+function getRecentLocations(){
+    return new Promise (function (resolve) {
+        MongoClient.connect(dbConfig.url, function(err, db) {
+            if (err) console.error(err);
+            let dbo = db.db(dbConfig.dbName);
+            let mysort = { name: -1 };
+            dbo.collection("recentlocations").find().limit(3).sort(mysort).toArray(function(err, result) {
+              if (err) console.error(err);
+              db.close();
+              resolve(result);
+            });
+        });
+    });
+};
 
 /*
 API HANDLERS
@@ -182,26 +208,11 @@ API HANDLERS
 
 //Handler for /go when userCoordinates is provided
 app.post('/newlocationsearch', (req, res) => {
-    //Sets off API requests and parsing, passes userCoordinates to Google Places Call function.
     sendLocationResponse(req, res);
 });
 
 app.get('/recentlocations', (req, res) => {
-    MongoClient.connect(dbConfig.url, function(err, db) {
-        if (err) console.error(err);
-        let dbo = db.db(dbConfig.dbName);
-        let mysort = { name: -1 };
-        dbo.collection("recentlocations").find().limit(3).sort(mysort).toArray(function(err, result) {
-          if (err) console.error(err);
-          db.close();
-          jsonResponse = JSON.stringify(result);
-            try{
-                res.send(jsonResponse);
-            }catch(error){
-                res.send(error);
-            }
-        });
-    });
+    sendRecentLocations(req, res);
 });
 
 app.get('/images', (req, res) => {
