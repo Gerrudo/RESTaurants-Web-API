@@ -83,43 +83,18 @@ function newRequest(randomPlace){
     });
 };
 
-function getResults(userCoordinates) {
-    try{
-        return new Promise (async function (resolve) {
-        //Search by location
-            let placesJson = await reusableRequest('https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant', 'GET');
-            let placesObj = JSON.parse(placesJson);
-            //Choose Random place
-            let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
-            //Check if data we got is cached in the database
-            let isCached = await cachedRequestCheck(randomPlace);
-            //If we have the data, pull from db, if not, make a new request.
-            if (isCached === true){
-                MongoClient.connect(dbConfig.url, function(err, db) {
-                    if (err) console.log(err);
-                    let dbo = db.db(dbConfig.dbName);
-                    let query = {"result.place_id": randomPlace.place_id};
-                        dbo.collection("recentlocations").find(query).toArray(function(err, result) {
-                            if (err) console.error(err);
-                            db.close();
-                            resolve(result[0])
-                    });
-                });
-            }else{
-                let result = await newRequest(randomPlace);
-                resolve(result);
-            }
-        })
-    }catch(error){
-        console.error(error);
-        return error;
-    }
-};
+async function getResults(userCoordinates) {
+    let placesJson = await reusableRequest('https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant', 'GET');
+    let placesObj = JSON.parse(placesJson);
 
-function cachedRequestCheck(randomPlace){
-    try{
-        return new Promise (function (resolve) {
-            //Here We will add the database to check for selected place_id
+    if (placesObj.status !== 'OK') {
+        throw new Error(placesObj.status);
+    };
+    
+    let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
+    let isCached = await cachedRequestCheck(randomPlace);
+    return new Promise (async function (resolve) {
+        if (isCached === true){
             MongoClient.connect(dbConfig.url, function(err, db) {
                 if (err) console.log(err);
                 let dbo = db.db(dbConfig.dbName);
@@ -127,27 +102,36 @@ function cachedRequestCheck(randomPlace){
                     dbo.collection("recentlocations").find(query).toArray(function(err, result) {
                         if (err) console.error(err);
                         db.close();
-                        if (result.length !== 0){
-                            isCached = true;
-                            resolve(isCached);
-                        }else{
-                            isCached = false;
-                            resolve(isCached);
-                        }
+                        resolve(result[0])
+                    });
                 });
-            });
-        })
-    }catch(error){
-        console.error(error);
-    }
-}
-
-function waitForDetails(userCoordinates){
-    return new Promise (async function (resolve) {
-        let responseObject = await getResults(userCoordinates);
-        resolve(responseObject);
+        }else{
+            let result = await newRequest(randomPlace);
+            resolve(result);
+        }
     })
 };
+
+function cachedRequestCheck(randomPlace){
+    return new Promise (function (resolve) {
+        MongoClient.connect(dbConfig.url, function(err, db) {
+            if (err) console.log(err);
+            let dbo = db.db(dbConfig.dbName);
+            let query = {"result.place_id": randomPlace.place_id};
+            dbo.collection("recentlocations").find(query).toArray(function(err, result) {
+                if (err) console.error(err);
+                    db.close();
+                    if (result.length !== 0){
+                        isCached = true;
+                        resolve(isCached);
+                    }else{
+                        isCached = false;
+                        resolve(isCached);
+                    }
+            });
+        });
+    })
+}
 
 function collectResults(placeDetailsObj){
     MongoClient.connect(dbConfig.url, function(err, db) {
@@ -181,20 +165,21 @@ API HANDLERS
 
 app.post('/newlocationsearch', async (req, res) => {
     try{
-        let responseObject = await waitForDetails(req.query.coordinates);
+        let responseObject = await getResults(req.query.coordinates);
         res.send(responseObject);
     }catch(error){
-        res.send(error);
+        res.status(500);
+        res.send(error.message);
     }
 });
 
-app.get('/recentlocations', async (req, res) => {
+app.get('/recentlocations', async (res) => {
     try{
         let result = await getRecentLocations();
         jsonResponse = JSON.stringify(result);
         res.send(jsonResponse);
     }catch(error){
-        res.send(error);
+        res.status(500);
     };
 });
 
