@@ -6,7 +6,6 @@ const request = require('request');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const port = process.env.PORT || 1443;
-//Will need to provide certs, can change format from .pem if needed
 const key = fs.readFileSync(__dirname + '/certs/privkey.pem');
 const cert = fs.readFileSync(__dirname + '/certs/cert.pem');
 const options = {
@@ -20,13 +19,10 @@ const dbConfig = require('./dbConfig.js');
 Express Server Creation/Parsing Tools
 */
 
-//Creating server with cert options
 const server = https.createServer(options, app);
-//Cors for later use and bodyParser for reading JSON body of incoming responses
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-//Start listening on 443 for connections
 server.listen(port, function(){
     console.log('listening on *:' + port);
 });
@@ -62,7 +58,6 @@ function reusableRequest(url, method){
         headers : ''
       }
     };
-    //Returns promise once Google Place API Request has finished
     return new Promise (function (resolve) {
       request(options, function (error, response) {
         if (error) console.error(error);
@@ -75,7 +70,6 @@ function reusableRequest(url, method){
 Google Places API Request/Parsing 
 */
 
-//Async function if we need to make a new request or if it can be pulled from the database.
 function newRequest(randomPlace){
     return new Promise (async function (resolve) {
         let getPlaceDetailsUrl = 'https://maps.googleapis.com/maps/api/place/details/json?place_id='+randomPlace.place_id+'&key='+apiKey0;
@@ -89,7 +83,6 @@ function newRequest(randomPlace){
     });
 };
 
-//Async function for getting all the results, returns placeDetailsJson
 function getResults(userCoordinates) {
     try{
         return new Promise (async function (resolve) {
@@ -149,23 +142,13 @@ function cachedRequestCheck(randomPlace){
     }
 }
 
-//Returns promise once all api requests have finished
 function waitForDetails(userCoordinates){
     return new Promise (async function (resolve) {
         let responseObject = await getResults(userCoordinates);
         resolve(responseObject);
     })
 };
-//Awaits for API promise to resolve
-async function sendLocationResponse(req, res){
-    try{
-        let responseObject = await waitForDetails(req.query.coordinates);
-        res.send(responseObject);
-    }catch(error){
-        res.send(error);
-    }
-};
-//Returning results to the database
+
 function collectResults(placeDetailsObj){
     MongoClient.connect(dbConfig.url, function(err, db) {
         if (err) console.error(err);
@@ -176,16 +159,6 @@ function collectResults(placeDetailsObj){
         });
     });
 }
-
-async function sendRecentLocations(req, res){
-    try{
-        let result = await getRecentLocations();
-        jsonResponse = JSON.stringify(result);
-        res.send(jsonResponse);
-    }catch(error){
-        res.send(error);
-    };
-};
 
 function getRecentLocations(){
     return new Promise (function (resolve) {
@@ -206,13 +179,23 @@ function getRecentLocations(){
 API HANDLERS
 */
 
-//Handler for /go when userCoordinates is provided
-app.post('/newlocationsearch', (req, res) => {
-    sendLocationResponse(req, res);
+app.post('/newlocationsearch', async (req, res) => {
+    try{
+        let responseObject = await waitForDetails(req.query.coordinates);
+        res.send(responseObject);
+    }catch(error){
+        res.send(error);
+    }
 });
 
-app.get('/recentlocations', (req, res) => {
-    sendRecentLocations(req, res);
+app.get('/recentlocations', async (req, res) => {
+    try{
+        let result = await getRecentLocations();
+        jsonResponse = JSON.stringify(result);
+        res.send(jsonResponse);
+    }catch(error){
+        res.send(error);
+    };
 });
 
 app.get('/images', (req, res) => {
