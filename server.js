@@ -17,9 +17,6 @@ require('./InitaliseMongoCollections.js');
 const recentLocations = require('./recentLocations.js');
 const newLocationSearch = require('./newLocationSearch.js');
 
-/*
-Express Server Creation/Parsing Tools
-*/
 
 const server = https.createServer(options, app);
 app.use(cors());
@@ -28,10 +25,6 @@ app.use(bodyParser.json());
 server.listen(port, function(){
     console.log('listening on *:' + port);
 });
-
-/*
-API HANDLERS
-*/
 
 app.post('/newlocationsearch', async (req, res) => {
     try{

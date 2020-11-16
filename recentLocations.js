@@ -10,7 +10,7 @@ let getRecentLocations = function getRecentLocations(){
             dbo.collection("recentlocations").find().limit(3).sort(mysort).toArray(function(err, result) {
                 if (err) throw new Error(err);
                 db.close();
-              resolve(result);
+                resolve(result);
             });
         });
     });

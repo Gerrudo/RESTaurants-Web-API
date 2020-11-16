@@ -15,7 +15,7 @@ MongoClient.connect(dbConfig.url, function(err, db) {
             console.log('Collection created');
             db.close();
         }catch(err){
-            console.error(`Collection may already exist. Please see following error: ${err}`)
+            console.error(`Collection may already exist. Please see following error. ${err}`)
         }
     });
 });
