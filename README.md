@@ -15,8 +15,11 @@ Backend Web API for the RESTaurants WebApp
     - [x] Create API endpoint for getting recent-locations collection
     - [x] Create insert for current results data: Name, Address(City/Town only), 1 image, link to google maps
 - [x] Use MongoDB to save details about user requests
-- [ ] Handle rating limiting issue with google API
-    - [ ] Store location JSON and pick random request based on user token.
-    - [ ] Only have API requests for new embeds and images (This is currently client side, this needs to be changed.)
-    - [ ] Impliment API rate limiting based on IP address
+- [x] Handle rating limiting issue with google API
+- [x] Have the database store and display results caching system
+    - [x] Only have API requests for new embeds and images (This is currently client side, this needs to be changed.)
+        - [x] Create endpoints for image requests
+        - [x] Update API and cache to construct and store only the image reference. 
+        - [x] Use our endpoint to be able to respond to any photo refrence and provide the specified photo from Google Places API
+    - [ ] Impliment API rate limiting based on IP address/Cookies
 - [ ] Move to Azure/AWS/GCloud for hosting
