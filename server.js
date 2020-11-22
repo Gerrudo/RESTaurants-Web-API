@@ -15,7 +15,7 @@ const options = {
 
 require('./InitaliseMongoCollections.js');
 const recentLocations = require('./recentLocations.js');
-const newLocationSearch = require('./newLocationSearch.js');
+const locationSearch = require('./newLocationSearch.js');
 
 
 const server = https.createServer(options, app);
@@ -28,7 +28,8 @@ server.listen(port, function(){
 
 app.post('/newlocationsearch', async (req, res) => {
     try{
-        let responseObject = await newLocationSearch.getResults(req.query.coordinates);
+        let newlocationSearch = new locationSearch();
+        let responseObject = await newlocationSearch.getResults(req.query.coordinates);
         res.send(responseObject);
     }catch(error){
         console.error(error);
