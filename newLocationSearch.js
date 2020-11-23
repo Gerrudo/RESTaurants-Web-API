@@ -4,10 +4,6 @@ const apiKey0 = require('./requestVarFile.js');
 const request = require('request');
 
 class locationSearch {
-    constructor() {
-        this.getResultsFromCache = this.getResultsFromCache.bind(this);
-        this.newRequest = this.newRequest.bind(this);
-    }
 
     async getResults(userCoordinates) {
         let placesJson = await this.webRequest('https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant', 'GET');
@@ -15,7 +11,7 @@ class locationSearch {
         if (placesObj.status !== 'OK') {throw new Error(placesObj.status)};
         let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
         let isCached = await this.cachedRequestCheck(randomPlace);
-        return new Promise (async (resolve) => {
+        new Promise (async (resolve) => {
             if (isCached === true){
                 let result = await this.getResultsFromCache(randomPlace);
                 resolve(result);
@@ -79,7 +75,7 @@ class locationSearch {
     };
     
     newRequest(randomPlace){
-        return new Promise (async function (resolve) {
+        return new Promise (async (resolve) => {
             let placeDetailsJson = await this.webRequest('https://maps.googleapis.com/maps/api/place/details/json?place_id='+randomPlace.place_id+'&key='+apiKey0, 'GET');
             let placeDetailsObj = JSON.parse(placeDetailsJson);
             this.collectResults(placeDetailsObj);
