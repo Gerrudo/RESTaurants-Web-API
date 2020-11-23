@@ -15,7 +15,7 @@ class locationSearch {
         if (placesObj.status !== 'OK') {throw new Error(placesObj.status)};
         let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
         let isCached = await this.cachedRequestCheck(randomPlace);
-        return new Promise (async function (resolve) {
+        return new Promise (async (resolve) => {
             if (isCached === true){
                 let result = await this.getResultsFromCache(randomPlace);
                 resolve(result);
@@ -98,6 +98,6 @@ class locationSearch {
             });
         });
     };
-}
+};
 
 module.exports = locationSearch;
