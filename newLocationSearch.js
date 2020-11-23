@@ -11,7 +11,8 @@ class locationSearch {
         if (placesObj.status !== 'OK') {throw new Error(placesObj.status)};
         let randomPlace = placesObj.results[ Math.floor(Math.random() * placesObj.results.length)];
         let isCached = await this.cachedRequestCheck(randomPlace);
-        new Promise (async (resolve) => {
+        return new Promise (async (resolve) => {
+            //The 2 await result declarations are not running async
             if (isCached === true){
                 let result = await this.getResultsFromCache(randomPlace);
                 resolve(result);
