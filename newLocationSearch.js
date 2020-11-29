@@ -61,12 +61,12 @@ class locationSearch {
     };
     
     getResultsFromCache(randomPlace) {
-        MongoClient.connect(dbConfig.url, function(err, db) {
-            if (err) throw new Error(err);
-            let dbo = db.db(dbConfig.dbName);
-            let query = {"result.place_id": randomPlace.place_id};
-            dbo.collection("recentlocations").find(query).toArray(function(err, result) {
-                return new Promise (function (resolve) {
+        return new Promise (function (resolve) {
+            MongoClient.connect(dbConfig.url, function(err, db) {
+                if (err) throw new Error(err);
+                let dbo = db.db(dbConfig.dbName);
+                let query = {"result.place_id": randomPlace.place_id};
+                dbo.collection("recentlocations").find(query).toArray(function(err, result) {
                     if (err) throw new Error(err);
                     db.close();
                     resolve(result[0]);
