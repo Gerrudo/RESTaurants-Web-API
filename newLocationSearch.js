@@ -31,8 +31,8 @@ class locationSearch {
             headers : ''
           }
         };
-        return new Promise (function (resolve) {
-          request(options, function (error, response) {
+        return new Promise ((resolve) => {
+          request(options, (error, response) => {
             if (error) throw new Error(error);
             resolve(response.body);
           });
@@ -40,12 +40,12 @@ class locationSearch {
     };
     
     cachedRequestCheck(randomPlace){
-        return new Promise (function (resolve) {
-            MongoClient.connect(dbConfig.url, function(err, db) {
+        return new Promise ((resolve) => {
+            MongoClient.connect(dbConfig.url, (err, db) => {
                 if (err) throw new Error(err);
                 let dbo = db.db(dbConfig.dbName);
                 let query = {"result.place_id": randomPlace.place_id};
-                dbo.collection("recentlocations").find(query).toArray(function(err, result) {
+                dbo.collection("recentlocations").find(query).toArray((err, result) => {
                     if (err) throw new Error(err);
                     db.close();
                     if (result.length !== 0){
@@ -61,12 +61,12 @@ class locationSearch {
     };
     
     getResultsFromCache(randomPlace) {
-        return new Promise (function (resolve) {
-            MongoClient.connect(dbConfig.url, function(err, db) {
+        return new Promise ((resolve) => {
+            MongoClient.connect(dbConfig.url, (err, db) => {
                 if (err) throw new Error(err);
                 let dbo = db.db(dbConfig.dbName);
                 let query = {"result.place_id": randomPlace.place_id};
-                dbo.collection("recentlocations").find(query).toArray(function(err, result) {
+                dbo.collection("recentlocations").find(query).toArray((err, result) => {
                     if (err) throw new Error(err);
                     db.close();
                     resolve(result[0]);
@@ -86,10 +86,10 @@ class locationSearch {
     };
     
     collectResults(placeDetailsObj){
-        MongoClient.connect(dbConfig.url, function(err, db) {
+        MongoClient.connect(dbConfig.url, (err, db) => {
             if (err) throw new Error(err);
             let dbo = db.db(dbConfig.dbName);
-            dbo.collection("recentlocations").insertOne(placeDetailsObj, function(err, res) {
+            dbo.collection("recentlocations").insertOne(placeDetailsObj, (err, res) => {
                 if (err) throw new Error(err);
                 db.close();
             });
