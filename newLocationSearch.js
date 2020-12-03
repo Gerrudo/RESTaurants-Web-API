@@ -4,7 +4,6 @@ const apiKey0 = require('./requestVarFile.js');
 const request = require('request');
 
 class locationSearch {
-
     async getResults(userCoordinates) {
         let placesJson = await this.webRequest('https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=' + apiKey0 + '&location=' + userCoordinates + '&rankby=distance&keyword =food&type=restaurant', 'GET');
         let placesObj = JSON.parse(placesJson);
@@ -80,7 +79,7 @@ class locationSearch {
             let placeDetailsJson = await this.webRequest('https://maps.googleapis.com/maps/api/place/details/json?place_id='+randomPlace.place_id+'&key='+apiKey0, 'GET');
             let placeDetailsObj = JSON.parse(placeDetailsJson);
             this.collectResults(placeDetailsObj);
-            jsonResponse = JSON.stringify(placeDetailsObj);
+            let jsonResponse = JSON.stringify(placeDetailsObj);
             resolve(jsonResponse);
         });
     };
