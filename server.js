@@ -18,8 +18,7 @@ const server = https.createServer(options, app);
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use('/', routes);
 server.listen(port, function(){
     console.log('listening on *:' + port);
 });
-
-routes.use('/recentlocations','/newlocationsearch','images');

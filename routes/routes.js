@@ -3,9 +3,9 @@ const locationSearch = require('../location/newLocationSearch.js');
 const apiKey0 = require('../configs/requestVarFile.js');
 const request = require('request');
 const express = require('express');
-const app = express.Router();
+const routes = express.Router();
 
-app.post('/newlocationsearch', async (req, res) => {
+routes.post('/newlocationsearch', async (req, res) => {
     try{
         let newlocationSearch = new locationSearch();
         let responseObject = await newlocationSearch.getResults(req.query.coordinates);
@@ -17,7 +17,7 @@ app.post('/newlocationsearch', async (req, res) => {
     };
 });
 
-app.get('/recentlocations', async (req, res) => {
+routes.get('/recentlocations', async (req, res) => {
     try{
         let result = await recentLocations.getRecentLocations();
         jsonResponse = JSON.stringify(result);
@@ -29,7 +29,7 @@ app.get('/recentlocations', async (req, res) => {
     };
 });
 
-app.get('/images', (req, res) => {
+routes.get('/images', (req, res) => {
     try{
         let url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=2000&photoreference=${req.query.photo_reference}&key=${apiKey0}`;
         request.get(url).pipe(res);
@@ -40,4 +40,4 @@ app.get('/images', (req, res) => {
     };
 });
 
-module.exports = app;
+module.exports = routes;
