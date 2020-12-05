@@ -1,5 +1,5 @@
 const MongoClient = require('mongodb').MongoClient;
-const dbConfig = require('./dbConfig.js');
+const dbConfig = require('../configs/dbConfig.js');
 
 let getRecentLocations = function getRecentLocations(){
     return new Promise (function (resolve) {

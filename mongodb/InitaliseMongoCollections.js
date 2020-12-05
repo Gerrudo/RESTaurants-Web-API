@@ -1,4 +1,4 @@
-const dbConfig = require('./dbConfig.js');
+const dbConfig = require('../configs/dbConfig.js');
 const MongoClient = require('mongodb').MongoClient;
 
 MongoClient.connect(dbConfig.url, function(err, db) {

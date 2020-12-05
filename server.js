@@ -13,9 +13,9 @@ const options = {
   cert: cert
 };
 
-require('./InitaliseMongoCollections.js');
-const recentLocations = require('./recentLocations.js');
-const locationSearch = require('./newLocationSearch.js');
+require('./mongodb/InitaliseMongoCollections.js');
+const recentLocations = require('./location/recentLocations.js');
+const locationSearch = require('./location/newLocationSearch.js');
 
 
 const server = https.createServer(options, app);

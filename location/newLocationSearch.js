@@ -1,6 +1,6 @@
 const MongoClient = require('mongodb').MongoClient;
-const dbConfig = require('./dbConfig.js');
-const apiKey0 = require('./requestVarFile.js');
+const dbConfig = require('../configs/dbConfig.js');
+const apiKey0 = require('../configs/requestVarFile.js');
 const request = require('request');
 
 class locationSearch {
