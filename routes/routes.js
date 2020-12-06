@@ -1,5 +1,6 @@
 const recentLocations = require('../location/recentLocations.js');
 const locationSearch = require('../location/newLocationSearch.js');
+const signUp = require('/../auth/users/signUp.js')
 const apiKey0 = require('../configs/requestVarFile.js');
 const request = require('request');
 const express = require('express');
@@ -33,6 +34,18 @@ routes.get('/images', (req, res) => {
     try{
         let url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=2000&photoreference=${req.query.photo_reference}&key=${apiKey0}`;
         request.get(url).pipe(res);
+    }catch(error){
+        console.error(error);
+        res.status(500);
+        res.json({'message': 'Something went wrong, please try again.'});
+    };
+});
+
+routes.post('/signup', async (req, res) => {
+    try{
+        let newSignUp = new signUp();
+        let responseObject = await newSignUp.validateUser(req)
+        res.send(responseObject);
     }catch(error){
         console.error(error);
         res.status(500);
