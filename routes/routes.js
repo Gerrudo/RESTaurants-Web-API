@@ -5,6 +5,7 @@ const apiKey0 = require('../configs/requestVarFile.js');
 const request = require('request');
 const express = require('express');
 const routes = express.Router();
+const { check, validationResult} = require("express-validator/check");
 
 routes.post('/newlocationsearch', async (req, res) => {
     try{
@@ -53,7 +54,7 @@ routes.post('/signup',
         })
     ], 
     async (req, res) => {
-        const errors = validationResult(req);
+        const errors = validationResult(req.body);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
@@ -62,6 +63,11 @@ routes.post('/signup',
             let newSignUp = new signUp();
             let responseObject = await newSignUp.validateUser(req.body)
             res.send(responseObject);
+            res.status(201);
+            res.json({
+                'message': `Account created for ${req.body.username}.`,
+                //Will also return token here.
+            });
         }catch(error){
             console.error(error);
             res.status(500);
