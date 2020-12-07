@@ -41,16 +41,32 @@ routes.get('/images', (req, res) => {
     };
 });
 
-routes.post('/signup', async (req, res) => {
-    try{
-        let newSignUp = new signUp();
-        let responseObject = await newSignUp.validateUser(req)
-        res.send(responseObject);
-    }catch(error){
-        console.error(error);
-        res.status(500);
-        res.json({'message': 'Something went wrong, please try again.'});
-    };
+routes.post('/signup',
+    //Input validation performed when route is declared. This may be worth changing into the class, as to keep seperation.
+    [
+        check("username", "Please Enter a Valid Username")
+        .not()
+        .isEmpty(),
+        check("email", "Please enter a valid email").isEmail(),
+        check("password", "Please enter a valid password").isLength({
+            min: 6
+        })
+    ], 
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        try{
+            let newSignUp = new signUp();
+            let responseObject = await newSignUp.validateUser(req.body)
+            res.send(responseObject);
+        }catch(error){
+            console.error(error);
+            res.status(500);
+            res.json({'message': 'Something went wrong, please try again.'});
+        };
 });
 
 module.exports = routes;
