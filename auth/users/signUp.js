@@ -1,6 +1,6 @@
 const { check, validationResult} = require("express-validator/check");
 const MongoClient = require('mongodb').MongoClient;
-const dbConfig = require('../configs/dbConfig.js');
+const dbConfig = require('../../configs/dbConfig.js');
 
 class signUp {
     constructor(){
@@ -32,3 +32,4 @@ class signUp {
 }
 
 module.exports = signUp;
+

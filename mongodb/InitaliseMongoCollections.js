@@ -9,13 +9,24 @@ MongoClient.connect(dbConfig.url, function(err, db) {
 MongoClient.connect(dbConfig.url, function(err, db) {
     if (err) throw new Error(err)
     let dbo = db.db(dbConfig.dbName);
+
     dbo.createCollection("recentlocations", function(err, res) {
         try {
             if (err) throw new Error(err)
-            console.log('Collection created');
+            console.log('recentlocations Collection created');
             db.close();
         }catch(err){
-            console.error(`Collection may already exist. Please see following error. ${err}`)
+            console.error(`recentlocations Collection may already exist. Please see following error. ${err}`)
+        }
+    });
+
+    dbo.createCollection("users", function(err, res) {
+        try {
+            if (err) throw new Error(err)
+            console.log('users Collection created');
+            db.close();
+        }catch(err){
+            console.error(`users Collection may already exist. Please see following error. ${err}`)
         }
     });
 });

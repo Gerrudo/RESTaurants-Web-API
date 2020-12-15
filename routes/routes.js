@@ -1,6 +1,6 @@
 const recentLocations = require('../location/recentLocations.js');
 const locationSearch = require('../location/newLocationSearch.js');
-const signUp = require('/../auth/users/signUp.js')
+const signUp = require('../auth/users/signUp.js')
 const apiKey0 = require('../configs/requestVarFile.js');
 const request = require('request');
 const express = require('express');
