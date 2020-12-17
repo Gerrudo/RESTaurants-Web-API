@@ -5,7 +5,7 @@ const apiKey0 = require('../configs/requestVarFile.js');
 const request = require('request');
 const express = require('express');
 const routes = express.Router();
-const { check, validationResult} = require("express-validator/check");
+const { check, validationResult} = require("express-validator");
 
 routes.post('/newlocationsearch', async (req, res) => {
     try{

@@ -13,7 +13,6 @@ const options = {
 };
 require('./mongodb/InitaliseMongoCollections.js');
 const routes = require('./routes/routes.js')
-
 const server = https.createServer(options, app);
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
